@@ -209,7 +209,8 @@ ul.options li[aria-selected="true"], ul.options li:hover { background: var(--ok-
     $("drop").disabled = busy || state.closed;
     $("draw").hidden = !!(me && me.drew);
     $("draw").disabled = busy || !me || !state.closed;
-    $("out-hint").textContent = !me ? "Put your own country in first." : !state.closed ? "Once everyone's in, the host closes the hat and you can draw." : "You get a random country that someone else put in. Draw once and keep it secret.";
+    if (!me && state.closed) say($("msg"), "The hat is closed and this device isn't in it. Ask the host to reopen it so you can add a country.", "warn");
+    $("out-hint").textContent = !me && state.closed ? "This device didn't put a country in before the hat closed." : !me ? "Put your own country in first." : !state.closed ? "Once everyone's in, the host closes the hat and you can draw." : "You get a random country that someone else put in. Draw once and keep it secret.";
     if (me && me.drew && !spinning) {
       $("reveal").hidden = !revealed; $("peek").hidden = revealed;
       if (revealed) paint(me.drew);
