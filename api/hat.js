@@ -3,10 +3,15 @@ import { Redis } from "@upstash/redis";
 import { randomUUID } from "node:crypto";
 import * as game from "./_game.js";
 
-const redis = new Redis({
-  url: process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN,
-});
+// Find the database settings whatever prefix Vercel/Upstash gave them
+// (KV_REST_API_URL, UPSTASH_REDIS_REST_URL, STORAGE_KV_REST_API_URL, ...).
+function findEnv(suffixes) {
+  const key = Object.keys(process.env).find((k) => suffixes.some((s) => k.endsWith(s)) && !k.includes("READ_ONLY"));
+  return key ? process.env[key] : undefined;
+}
+const DB_URL = findEnv(["KV_REST_API_URL", "REDIS_REST_URL"]);
+const DB_TOKEN = findEnv(["KV_REST_API_TOKEN", "REDIS_REST_TOKEN"]);
+const redis = DB_URL && DB_TOKEN ? new Redis({ url: DB_URL, token: DB_TOKEN }) : null;
 const KEY = "hat:state";
 const LOCK = "hat:lock";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -40,9 +45,15 @@ function isHost(req) {
 }
 
 export default async function handler(req, res) {
+  if (!redis) {
+    const names = Object.keys(process.env).filter((k) => /REDIS|KV_|UPSTASH/.test(k));
+    return res.status(500).json({ error: "Setup problem: the hat can't find its database settings. " +
+      (names.length ? "Found: " + names.join(", ") + "." : "No database settings found. Connect the Upstash database to this project, then redeploy.") });
+  }
   try {
     if (req.method === "GET") {
       if (req.query.host) {
+        if (!process.env.HOST_PASSWORD) return res.status(500).json({ error: "Setup problem: HOST_PASSWORD isn't set in Vercel (or the site wasn't redeployed after adding it)." });
         if (!isHost(req)) return res.status(401).json({ error: "Wrong host password." });
         return res.json(game.hostView(await load()));
       }
@@ -70,6 +81,6 @@ export default async function handler(req, res) {
   } catch (e) {
     if (e instanceof game.GameError) return res.status(400).json({ error: e.message });
     console.error(e);
-    return res.status(500).json({ error: "Could not reach the hat. Try again in a moment." });
+    return res.status(500).json({ error: "Could not reach the hat (" + String(e && e.message || e).slice(0, 160) + ")" });
   }
 }
