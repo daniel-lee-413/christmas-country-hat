@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Christmas Country Hat</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Young+Serif&display=swap">
+<style>
+:root {
+  --bg: #eef2ee; --surface: #fafcf9; --ink: #14302a; --muted: #4f6a62; --line: #cdd9d2;
+  --berry: #a3213b; --berry-ink: #fff; --brass: #8f6410; --pine: #1b6e5a; --warn-bg: #fbe9ec; --ok-bg: #e3f1ea;
+  --font-display: "Young Serif", Georgia, serif; --font-body: "Figtree", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0d201c; --surface: #142f29; --ink: #e9f0ea; --muted: #9db7ae; --line: #27463e;
+    --berry: #c9364f; --brass: #e2b457; --pine: #5fc2a6; --warn-bg: #3a1a22; --ok-bg: #173a31; color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 var(--font-body); padding: 24px 16px 40px; }
+.wrap { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+header { display: flex; align-items: center; gap: 16px; }
+.hat { width: 84px; height: 84px; flex: none; }
+.hat .brim, .hat .crown { fill: var(--ink); } .hat .band { fill: var(--berry); } .hat .star { fill: var(--brass); }
+h1 { font: 400 2rem/1.1 var(--font-display); margin: 0; }
+.tally { margin: 6px 0 0; color: var(--muted); font-size: .95rem; font-variant-numeric: tabular-nums; }
+section { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.label { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--brass); font-weight: 700; margin: 0; }
+h2 { font: 400 1.35rem var(--font-display); margin: 0; }
+.hint { margin: 0; color: var(--muted); font-size: .95rem; }
+form { display: flex; flex-direction: column; gap: 10px; }
+input { font: inherit; color: var(--ink); background: var(--bg); border: 1.5px solid var(--line); border-radius: 10px; padding: 12px 14px; width: 100%; }
+button { font: inherit; font-weight: 700; border-radius: 10px; padding: 12px 16px; border: 0; cursor: pointer; background: var(--berry); color: var(--berry-ink); }
+button.quiet { background: transparent; color: var(--ink); border: 1.5px solid var(--line); font-weight: 600; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--pine); outline-offset: 2px; }
+ul.options { list-style: none; margin: 0; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; max-height: 240px; overflow-y: auto; }
+ul.options li { padding: 9px 10px; border-radius: 8px; cursor: pointer; display: flex; gap: 10px; }
+ul.options li[aria-selected="true"], ul.options li:hover { background: var(--ok-bg); }
+.flag { font-size: 1.3rem; line-height: 1; }
+.msg { margin: 0; padding: 10px 12px; border-radius: 10px; font-size: .95rem; }
+.msg.warn { background: var(--warn-bg); } .msg.ok { background: var(--ok-bg); } .msg:empty { display: none; }
+.mine { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.mine strong { font: 400 1.2rem var(--font-display); }
+.reveal { background: var(--bg); border: 1.5px dashed var(--brass); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 6px; }
+.big { font: 2.1rem/1.1 var(--font-display); overflow-wrap: anywhere; }
+.big .flag { font-size: 2.4rem; margin-right: 8px; }
+.spinning .big { opacity: .7; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0; margin: 0; list-style: none; }
+.chips li { border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; background: var(--bg); }
+.chips li.done { opacity: .55; text-decoration: line-through; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+[hidden] { display: none !important; }
+@media (max-width: 420px) { h1 { font-size: 1.65rem; } .hat { width: 64px; height: 64px; } .big { font-size: 1.75rem; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <svg class="hat" viewBox="0 0 96 96" role="img" aria-label="A top hat with a berry-red band">
+      <ellipse class="brim" cx="48" cy="76" rx="40" ry="9"/>
+      <path class="crown" d="M24 76 L28 26 Q48 18 68 26 L72 76 Q48 84 24 76 Z"/>
+      <path class="band" d="M25.5 64 Q48 72 70.5 64 L71.2 72 Q48 80 24.8 72 Z"/>
+      <path class="star" d="M48 6 l3.2 6.6 7.3 1 -5.3 5.1 1.3 7.2 -6.5 -3.5 -6.5 3.5 1.3 -7.2 -5.3 -5.1 7.3 -1 z"/>
+    </svg>
+    <div><h1>Christmas Country Hat</h1><p class="tally" id="tally">Opening the hat…</p></div>
+  </header>
+
+  <!-- PLAYER VIEW -->
+  <div id="player" class="wrap" style="padding:0">
+    <section>
+      <p class="label">Step 1</p>
+      <h2>Put your country in the hat</h2>
+      <p class="hint">Add your name, then type a country and pick it from the list. No country can go in twice.</p>
+      <form id="in-form" autocomplete="off">
+        <input type="text" id="name" placeholder="Your name" maxlength="40">
+        <input type="text" id="country" placeholder="Start typing, e.g. Japan" role="combobox" aria-expanded="false" aria-controls="opts">
+        <ul class="options" id="opts" role="listbox" hidden></ul>
+        <button type="submit" id="drop">Drop it in the hat</button>
+      </form>
+      <div class="mine" id="mine" hidden>
+        <span><span id="mine-who"></span>, you put in <strong id="mine-name"></strong></span>
+        <button type="button" class="quiet" id="change">Take it back out</button>
+      </div>
+      <p class="msg" id="msg" role="status" aria-live="polite"></p>
+    </section>
+
+    <section>
+      <p class="label">Step 2</p>
+      <h2>Pull one out</h2>
+      <p class="hint" id="out-hint">Once everyone's in, the host closes the hat and you can draw.</p>
+      <button type="button" id="draw" disabled>Draw from the hat</button>
+      <div class="reveal" id="reveal" hidden>
+        <span class="label">Your country</span>
+        <div class="big" id="big"></div>
+        <p class="hint">Keep it secret until the night. Start planning the outfit.</p>
+      </div>
+      <button type="button" class="quiet" id="peek" hidden>Show my country</button>
+      <p class="msg" id="msg2" role="status" aria-live="polite"></p>
+    </section>
+  </div>
+
+  <!-- HOST VIEW (open the site with ?host on the end) -->
+  <div id="host" class="wrap" style="padding:0" hidden>
+    <section id="host-login">
+      <p class="label">Host</p>
+      <h2>Host password</h2>
+      <form id="host-form"><input type="password" id="pw" placeholder="Password"><button type="submit">Open host view</button></form>
+      <p class="msg" id="hmsg"></p>
+    </section>
+    <section id="host-panel" hidden>
+      <p class="label">Host</p>
+      <h2 id="host-status"></h2>
+      <p class="hint">Who's joined (✓ = has drawn):</p>
+      <ul class="chips" id="people"></ul>
+      <details><summary class="hint">Spoilers: countries in the hat</summary><ul class="chips" id="countries" style="padding-top:10px"></ul></details>
+      <div class="row">
+        <button type="button" id="close-hat">Close the hat</button>
+        <button type="button" class="quiet" id="open-hat">Reopen</button>
+        <button type="button" class="quiet" id="reset">Reset everything</button>
+      </div>
+      <p class="msg" id="hmsg2"></p>
+    </section>
+  </div>
+</div>
+
+<script>
+(function () {
+  var RAW = "AF|Afghanistan,AL|Albania,DZ|Algeria,AD|Andorra,AO|Angola,AG|Antigua and Barbuda,AR|Argentina,AM|Armenia,AU|Australia,AT|Austria,AZ|Azerbaijan,BS|Bahamas,BH|Bahrain,BD|Bangladesh,BB|Barbados,BY|Belarus,BE|Belgium,BZ|Belize,BJ|Benin,BT|Bhutan,BO|Bolivia,BA|Bosnia and Herzegovina,BW|Botswana,BR|Brazil,BN|Brunei,BG|Bulgaria,BF|Burkina Faso,BI|Burundi,CV|Cape Verde,KH|Cambodia,CM|Cameroon,CA|Canada,CF|Central African Republic,TD|Chad,CL|Chile,CN|China,CO|Colombia,KM|Comoros,CG|Congo,CD|DR Congo,CR|Costa Rica,CI|Ivory Coast,HR|Croatia,CU|Cuba,CY|Cyprus,CZ|Czechia,DK|Denmark,DJ|Djibouti,DM|Dominica,DO|Dominican Republic,EC|Ecuador,EG|Egypt,SV|El Salvador,GQ|Equatorial Guinea,ER|Eritrea,EE|Estonia,SZ|Eswatini,ET|Ethiopia,FJ|Fiji,FI|Finland,FR|France,GA|Gabon,GM|Gambia,GE|Georgia,DE|Germany,GH|Ghana,GR|Greece,GD|Grenada,GT|Guatemala,GN|Guinea,GW|Guinea-Bissau,GY|Guyana,HT|Haiti,HN|Honduras,HU|Hungary,IS|Iceland,IN|India,ID|Indonesia,IR|Iran,IQ|Iraq,IE|Ireland,IL|Israel,IT|Italy,JM|Jamaica,JP|Japan,JO|Jordan,KZ|Kazakhstan,KE|Kenya,KI|Kiribati,KW|Kuwait,KG|Kyrgyzstan,LA|Laos,LV|Latvia,LB|Lebanon,LS|Lesotho,LR|Liberia,LY|Libya,LI|Liechtenstein,LT|Lithuania,LU|Luxembourg,MG|Madagascar,MW|Malawi,MY|Malaysia,MV|Maldives,ML|Mali,MT|Malta,MH|Marshall Islands,MR|Mauritania,MU|Mauritius,MX|Mexico,FM|Micronesia,MD|Moldova,MC|Monaco,MN|Mongolia,ME|Montenegro,MA|Morocco,MZ|Mozambique,MM|Myanmar,NA|Namibia,NR|Nauru,NP|Nepal,NL|Netherlands,NZ|New Zealand,NI|Nicaragua,NE|Niger,NG|Nigeria,KP|North Korea,MK|North Macedonia,NO|Norway,OM|Oman,PK|Pakistan,PW|Palau,PS|Palestine,PA|Panama,PG|Papua New Guinea,PY|Paraguay,PE|Peru,PH|Philippines,PL|Poland,PT|Portugal,QA|Qatar,RO|Romania,RU|Russia,RW|Rwanda,KN|Saint Kitts and Nevis,LC|Saint Lucia,VC|Saint Vincent and the Grenadines,WS|Samoa,SM|San Marino,ST|Sao Tome and Principe,SA|Saudi Arabia,SN|Senegal,RS|Serbia,SC|Seychelles,SL|Sierra Leone,SG|Singapore,SK|Slovakia,SI|Slovenia,SB|Solomon Islands,SO|Somalia,ZA|South Africa,KR|South Korea,SS|South Sudan,ES|Spain,LK|Sri Lanka,SD|Sudan,SR|Suriname,SE|Sweden,CH|Switzerland,SY|Syria,TW|Taiwan,TJ|Tajikistan,TZ|Tanzania,TH|Thailand,TL|Timor-Leste,TG|Togo,TO|Tonga,TT|Trinidad and Tobago,TN|Tunisia,TR|Turkey,TM|Turkmenistan,TV|Tuvalu,UG|Uganda,UA|Ukraine,AE|United Arab Emirates,GB|United Kingdom,US|United States,UY|Uruguay,UZ|Uzbekistan,VU|Vanuatu,VA|Vatican City,VE|Venezuela,VN|Vietnam,YE|Yemen,ZM|Zambia,ZW|Zimbabwe";
+  var ALIASES = { "usa":"US","us":"US","america":"US","united states of america":"US","uk":"GB","britain":"GB","great britain":"GB","england":"GB","scotland":"GB","wales":"GB","uae":"AE","emirates":"AE","holland":"NL","czech republic":"CZ","burma":"MM","cote d ivoire":"CI","democratic republic of the congo":"CD","drc":"CD","republic of the congo":"CG","swaziland":"SZ","east timor":"TL","cabo verde":"CV","turkiye":"TR","macedonia":"MK","vatican":"VA","holy see":"VA","korea":"KR","republic of korea":"KR" };
+  function norm(s) { return String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim(); }
+  var LIST = RAW.split(",").map(function (p) { var a = p.split("|"); return { code: a[0], name: a[1], n: norm(a[1]) }; });
+  var BY = {}; LIST.forEach(function (c) { BY[c.code] = c; });
+  function flag(code) { return String.fromCodePoint(127397 + code.charCodeAt(0), 127397 + code.charCodeAt(1)); }
+  function nameOf(code) { return BY[code] ? BY[code].name : code; }
+  function resolve(q) { var n = norm(q); if (!n) return null; if (ALIASES[n]) return BY[ALIASES[n]]; return LIST.filter(function (c) { return c.n === n; })[0] || null; }
+  function suggest(q) {
+    var n = norm(q); if (!n) return [];
+    var out = LIST.filter(function (c) { return c.n.indexOf(n) === 0 || c.n.indexOf(" " + n) > -1; });
+    LIST.forEach(function (c) { if (out.indexOf(c) < 0 && c.n.indexOf(n) > -1) out.push(c); });
+    Object.keys(ALIASES).forEach(function (k) { if (k.indexOf(n) === 0 && out.indexOf(BY[ALIASES[k]]) < 0) out.push(BY[ALIASES[k]]); });
+    return out.slice(0, 6);
+  }
+  var $ = function (id) { return document.getElementById(id); };
+  function say(el, text, tone) { el.textContent = text || ""; el.className = "msg " + (tone || ""); }
+
+  async function api(method, body, extraHeaders) {
+    var opts = { method: method, headers: Object.assign({ "content-type": "application/json" }, extraHeaders || {}) };
+    var url = "/api/hat";
+    if (method === "GET") url += "?" + new URLSearchParams(body).toString(); else opts.body = JSON.stringify(body);
+    var r = await fetch(url, opts);
+    var data = await r.json().catch(function () { return {}; });
+    if (!r.ok) throw new Error(data.error || "Could not reach the hat. Try again in a moment.");
+    return data;
+  }
+
+  // ---------- HOST ----------
+  if (new URLSearchParams(location.search).has("host")) {
+    $("player").hidden = true; $("host").hidden = false;
+    var pw = "", resetArmed = false;
+    try { pw = sessionStorage.getItem("hatpw") || ""; } catch (e) {}
+    function drawHost(v) {
+      $("host-login").hidden = true; $("host-panel").hidden = false;
+      var drawn = v.people.filter(function (p) { return p.hasDrawn; }).length;
+      $("tally").textContent = v.people.length + " in the hat · " + drawn + " drawn";
+      $("host-status").textContent = v.closed ? "The hat is closed. People can draw." : "The hat is open. People are adding countries.";
+      $("people").innerHTML = ""; $("countries").innerHTML = "";
+      v.people.forEach(function (p) { var li = document.createElement("li"); li.textContent = p.name + (p.hasDrawn ? " ✓" : ""); $("people").appendChild(li); });
+      v.countries.slice().sort(function (a, b) { return nameOf(a.code).localeCompare(nameOf(b.code)); }).forEach(function (c) {
+        var li = document.createElement("li"); if (c.drawn) li.className = "done"; li.textContent = flag(c.code) + " " + nameOf(c.code); $("countries").appendChild(li);
+      });
+      if (!v.people.length) { var li = document.createElement("li"); li.textContent = "Nobody yet"; $("people").appendChild(li); }
+      $("close-hat").disabled = v.closed; $("open-hat").disabled = !v.closed || drawn > 0;
+    }
+    async function hostLoad() {
+      try { drawHost(await api("GET", { host: 1 }, { "x-host-password": pw })); try { sessionStorage.setItem("hatpw", pw); } catch (e) {} }
+      catch (e) { $("host-login").hidden = false; $("host-panel").hidden = true; if (pw) say($("hmsg"), e.message, "warn"); }
+    }
+    async function hostDo(action) {
+      try { drawHost(await api("POST", { action: action }, { "x-host-password": pw })); say($("hmsg2"), ""); }
+      catch (e) { say($("hmsg2"), e.message, "warn"); }
+    }
+    $("host-form").addEventListener("submit", function (ev) { ev.preventDefault(); pw = $("pw").value; hostLoad(); });
+    $("close-hat").addEventListener("click", function () { hostDo("close"); });
+    $("open-hat").addEventListener("click", function () { hostDo("open"); });
+    $("reset").addEventListener("click", function () {
+      if (!resetArmed) { resetArmed = true; $("reset").textContent = "Tap again to wipe everything"; setTimeout(function () { resetArmed = false; $("reset").textContent = "Reset everything"; }, 4000); return; }
+      resetArmed = false; $("reset").textContent = "Reset everything"; hostDo("reset");
+    });
+    if (pw) hostLoad();
+    setInterval(function () { if (!$("host-panel").hidden) hostLoad(); }, 5000);
+    return;
+  }
+
+  // ---------- PLAYER ----------
+  var id = null;
+  try { id = localStorage.getItem("hatid"); if (!id) { id = crypto.randomUUID(); localStorage.setItem("hatid", id); } } catch (e) {}
+  if (!id) id = crypto.randomUUID();
+  try { $("name").value = localStorage.getItem("hatname") || ""; } catch (e) {}
+
+  var state = null, busy = false, spinning = false, revealed = false, picked = null, shown = [], active = -1;
+
+  function render() {
+    if (!state) return;
+    $("tally").textContent = state.count + (state.count === 1 ? " country" : " countries") + " in the hat · " + state.drawn + " drawn" + (state.closed ? " · hat closed" : "");
+    var me = state.me;
+    $("in-form").hidden = !!me; $("mine").hidden = !me;
+    if (me) { $("mine-who").textContent = me.name; $("mine-name").textContent = flag(me.code) + " " + nameOf(me.code); }
+    $("change").disabled = busy || state.closed;
+    $("drop").disabled = busy || state.closed;
+    $("draw").hidden = !!(me && me.drew);
+    $("draw").disabled = busy || !me || !state.closed;
+    $("out-hint").textContent = !me ? "Put your own country in first." : !state.closed ? "Once everyone's in, the host closes the hat and you can draw." : "You get a random country that someone else put in. Draw once and keep it secret.";
+    if (me && me.drew && !spinning) {
+      $("reveal").hidden = !revealed; $("peek").hidden = revealed;
+      if (revealed) paint(me.drew);
+    } else if (!spinning) { $("reveal").hidden = true; $("peek").hidden = true; }
+  }
+  function paint(code, cls) {
+    $("reveal").className = "reveal" + (cls ? " " + cls : "");
+    $("big").innerHTML = ""; var f = document.createElement("span"); f.className = "flag"; f.textContent = flag(code);
+    $("big").appendChild(f); $("big").appendChild(document.createTextNode(nameOf(code)));
+  }
+  async function refresh() { try { state = await api("GET", { id: id }); render(); } catch (e) { say($("msg"), e.message, "warn"); } }
+
+  // autocomplete
+  var input = $("country"), opts = $("opts");
+  function closeOpts() { opts.hidden = true; input.setAttribute("aria-expanded", "false"); active = -1; }
+  function pick(c) { picked = c; input.value = c.name; closeOpts(); }
+  function showOpts() {
+    shown = suggest(input.value); opts.innerHTML = ""; active = -1;
+    if (!shown.length) return closeOpts();
+    shown.forEach(function (c) {
+      var li = document.createElement("li"); li.setAttribute("role", "option");
+      li.innerHTML = '<span class="flag"></span><span></span>'; li.children[0].textContent = flag(c.code); li.children[1].textContent = c.name;
+      li.addEventListener("mousedown", function (ev) { ev.preventDefault(); pick(c); });
+      opts.appendChild(li);
+    });
+    opts.hidden = false; input.setAttribute("aria-expanded", "true");
+  }
+  function mark() { Array.prototype.forEach.call(opts.children, function (li, i) { li.setAttribute("aria-selected", i === active ? "true" : "false"); }); }
+  input.addEventListener("input", function () { picked = null; say($("msg"), ""); showOpts(); });
+  input.addEventListener("keydown", function (ev) {
+    if (ev.key === "ArrowDown" && shown.length) { ev.preventDefault(); active = (active + 1) % shown.length; mark(); }
+    else if (ev.key === "ArrowUp" && shown.length) { ev.preventDefault(); active = (active - 1 + shown.length) % shown.length; mark(); }
+    else if (ev.key === "Enter" && active > -1) { ev.preventDefault(); pick(shown[active]); }
+    else if (ev.key === "Escape") closeOpts();
+  });
+  input.addEventListener("blur", function () { setTimeout(closeOpts, 120); });
+
+  async function act(body, okText, msgEl) {
+    busy = true; render();
+    try { state = await api("POST", Object.assign({ id: id }, body)); if (okText) say(msgEl, okText, "ok"); return true; }
+    catch (e) { say(msgEl, e.message, "warn"); return false; }
+    finally { busy = false; render(); }
+  }
+
+  $("in-form").addEventListener("submit", async function (ev) {
+    ev.preventDefault();
+    var name = $("name").value.trim();
+    if (!name) return say($("msg"), "Tell the hat your name first.", "warn");
+    var c = picked || resolve(input.value);
+    if (!c) return say($("msg"), "Pick a country from the list so the hat can recognise it.", "warn");
+    try { localStorage.setItem("hatname", name); } catch (e) {}
+    if (await act({ action: "add", name: name, code: c.code }, c.name + " is in the hat.", $("msg"))) { input.value = ""; picked = null; }
+  });
+  $("change").addEventListener("click", function () { act({ action: "remove" }, "Taken back out. Pick a different country.", $("msg")); });
+  $("peek").addEventListener("click", function () { revealed = true; render(); });
+
+  $("draw").addEventListener("click", async function () {
+    say($("msg2"), "");
+    if (!(await act({ action: "draw" }, "", $("msg2")))) return;
+    var finalCode = state.me.drew;
+    spinning = true; $("reveal").hidden = false; $("peek").hidden = true; $("draw").hidden = true;
+    var reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var t = reduced ? null : setInterval(function () { paint(LIST[Math.floor(Math.random() * LIST.length)].code, "spinning"); }, 80);
+    setTimeout(function () { clearInterval(t); spinning = false; revealed = true; paint(finalCode); render(); }, reduced ? 0 : 1500);
+  });
+
+  refresh();
+  setInterval(function () { if (!busy && !spinning) refresh(); }, 5000);
+})();
+</script>
+</body>
+</html>
