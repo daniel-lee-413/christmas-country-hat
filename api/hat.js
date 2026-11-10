@@ -100,6 +100,12 @@ export default async function handler(req, res) {
 
     const { id, name, code } = req.body || {};
     if (!id || typeof id !== "string") return res.status(400).json({ error: "Missing player id." });
+    if (action === "claim") {
+      let problem;
+      const view = await withLock((s) => { problem = game.claim(s, id, name, code); return game.playerView(s, id); });
+      if (problem) return res.status(400).json({ error: problem });
+      return res.json(view);
+    }
     const view = await withLock((s) => {
       if (action === "add") game.add(s, id, name, code);
       else if (action === "remove") game.remove(s, id);

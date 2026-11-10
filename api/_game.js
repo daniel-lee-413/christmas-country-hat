@@ -45,6 +45,26 @@ export function remove(s, id) {
   delete s.players[id];
 }
 
+// Reconnect an existing entry to a new phone/browser. Proof = name + the country
+// they put in (only they know it). Returns an error message, or null on success.
+// Returns rather than throws so failed attempts are still saved and counted.
+export function claim(s, id, name, code) {
+  if (s.players[id]) return "This phone already has an entry.";
+  const k = nameKey(name);
+  code = String(code || "").toUpperCase();
+  s.fails = s.fails || {};
+  const found = Object.entries(s.players).find(([, p]) => nameKey(p.name) === k);
+  if (found && (s.fails[k] || 0) >= 5) return "Too many wrong tries for that name. Ask the organiser to start a new round, or check with them.";
+  if (!found || found[1].code !== code) {
+    if (found) s.fails[k] = (s.fails[k] || 0) + 1;
+    return "No entry matches that name and country. Check both are exactly what you entered.";
+  }
+  s.players[id] = found[1];
+  delete s.players[found[0]];
+  delete s.fails[k];
+  return null;
+}
+
 export function setOpen(s, open) {
   if (s.phase === "drawn") throw new GameError("The draw has already run. Start a new round instead.");
   s.phase = open ? "open" : "closed";

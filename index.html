@@ -165,6 +165,7 @@ footer { text-align: center; color: #6F8E84; font-size: .8rem; margin-top: 4px; 
         <ul class="options" id="opts" role="listbox" hidden></ul>
         <button type="submit" id="drop">Drop it in the hat</button>
       </form>
+      <button type="button" class="quiet" id="find-toggle" hidden>Already in on another phone? Find my entry</button>
       <div class="mine" id="mine" hidden>
         <div><div class="who" id="mine-who"></div><div class="what" id="mine-name"></div></div>
         <button type="button" class="quiet" id="change">Change</button>
@@ -319,6 +320,7 @@ footer { text-align: center; color: #6F8E84; font-size: .8rem; margin-top: 4px; 
   if (!id) { id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()); store("hatid", id); }
   $("name").value = store("hatname") || "";
 
+  var finding = false;
   var state = null, busy = false, revealing = false, picked = null, shown = [], active = -1;
 
   function render() {
@@ -326,16 +328,21 @@ footer { text-align: center; color: #6F8E84; font-size: .8rem; margin-top: 4px; 
     setStatus(state.phase);
     $("tally").textContent = people(state.count);
     var me = state.me, open = state.phase === "open";
-    $("in-form").hidden = !!me || !open; $("mine").hidden = !me;
+    if (!me && !open) finding = true;
+    $("in-form").hidden = !!me || (!open && !finding); $("mine").hidden = !me;
     $("in-hint").hidden = !!me;
+    $("in-hint").textContent = finding ? "Already put a country in? Enter the same name and country you used, and this phone will reconnect to your entry."
+      : "Add your name and choose a country. Nobody else can see which country you put in.";
+    $("drop").textContent = finding ? "Find my entry" : "Drop it in the hat";
+    $("find-toggle").hidden = !!me || !open;
+    $("find-toggle").textContent = finding ? "New here? Add your country instead" : "Already in on another phone? Find my entry";
     if (me) { $("mine-who").textContent = "You're in, " + me.name; $("mine-name").textContent = flag(me.code) + " " + nameOf(me.code); }
     $("change").hidden = !open;
-    if (!me && !open && !$("msg").textContent) say($("msg"), "Entries are closed and this phone isn't in the hat. Ask the organiser to reopen entries if you want to join.", "warn");
 
     var got = me && me.got, seen = got && store("hatseen") === id + got;
     var hint = state.phase === "open" ? "Once everyone's in, the organiser closes entries and runs the draw."
       : state.phase === "closed" ? (me ? "Entries are closed. Waiting for the organiser to run the draw." : "")
-      : me ? "The draw is done. Your country is waiting in the hat, and only you can see it." : "The draw has run, but this phone didn't have an entry.";
+      : me ? "The draw is done. Your country is waiting in the hat, and only you can see it." : "The draw has run. If you put a country in, find your entry above to see what you got.";
     $("out-hint").textContent = hint;
     if (revealing) return;
     $("waiting").hidden = !!seen;
@@ -387,8 +394,12 @@ footer { text-align: center; color: #6F8E84; font-size: .8rem; margin-top: 4px; 
     var c = picked || resolve(input.value);
     if (!c) { input.focus(); return say($("msg"), "Choose a country from the list.", "warn"); }
     store("hatname", name);
-    if (await act($("drop"), { action: "add", name: name, code: c.code }, "Your country is in the hat. Only you can see it.")) { input.value = ""; picked = null; }
+    var ok = finding
+      ? await act($("drop"), { action: "claim", name: name, code: c.code }, "Found you. This phone is reconnected to your entry.")
+      : await act($("drop"), { action: "add", name: name, code: c.code }, "Your country is in the hat. Only you can see it.");
+    if (ok) { input.value = ""; picked = null; finding = false; render(); }
   });
+  $("find-toggle").addEventListener("click", function () { finding = !finding; say($("msg"), ""); render(); });
   $("change").addEventListener("click", function () { act($("change"), { action: "remove" }, "Taken out. Choose a different country."); });
 
   $("reveal-btn").addEventListener("click", function () {
