@@ -171,6 +171,7 @@ footer { text-align: center; color: #6F8E84; font-size: .8rem; margin-top: 4px; 
         <button type="button" class="quiet" id="change">Change</button>
       </div>
       <p class="msg" id="msg" role="status" aria-live="polite"></p>
+      <p class="msg warn" id="forget" hidden>This browser won't remember you after you close it (private browsing or blocked cookies). That's fine: next time, tap <b>Find my entry</b> and enter the same name and country.</p>
     </section>
 
     <section>
@@ -316,6 +317,8 @@ footer { text-align: center; color: #6F8E84; font-size: .8rem; margin-top: 4px; 
   }
 
   // ---------- PLAYER ----------
+  // Can this browser remember us? (Not in some private tabs, or with all cookies blocked.)
+  var canRemember = (function () { try { localStorage.setItem("hattest", "1"); var ok = localStorage.getItem("hattest") === "1"; localStorage.removeItem("hattest"); return ok; } catch (e) { return false; } })();
   var id = store("hatid");
   if (!id) { id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()); store("hatid", id); }
   $("name").value = store("hatname") || "";
@@ -349,6 +352,7 @@ footer { text-align: center; color: #6F8E84; font-size: .8rem; margin-top: 4px; 
     $("reveal-btn").hidden = !got || seen;
     $("stage").hidden = !seen;
     if (seen) paintTag(got, me.name);
+    $("forget").hidden = !(me && !canRemember);
   }
   function paintTag(code, name) { $("tflag").textContent = flag(code); $("tname").textContent = nameOf(code); $("tfor").textContent = "for " + name; }
   async function refresh() { try { state = await api("GET", { id: id }); render(); } catch (e) { say($("msg"), e.message, "warn"); } }
