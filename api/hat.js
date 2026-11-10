@@ -13,6 +13,8 @@ const DB_URL = findEnv(["KV_REST_API_URL", "REDIS_REST_URL"]);
 const DB_TOKEN = findEnv(["KV_REST_API_TOKEN", "REDIS_REST_TOKEN"]);
 const redis = DB_URL && DB_TOKEN ? new Redis({ url: DB_URL, token: DB_TOKEN }) : null;
 const KEY = "hat:state";
+// When this many people are in, entries close and the draw runs automatically.
+const TARGET = parseInt(process.env.PLAYER_COUNT || "5", 10);
 const LOCK = "hat:lock";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -40,7 +42,7 @@ async function withLock(fn) {
 }
 
 // Tell the organiser the draw has run. Names only: no countries, no allocations.
-async function emailOrganiser(names) {
+async function emailOrganiser(names, auto) {
   const key = process.env.RESEND_API_KEY, to = process.env.ORGANISER_EMAIL;
   if (!key || !to) return "Email not set up (RESEND_API_KEY / ORGANISER_EMAIL missing), so no email was sent.";
   const from = process.env.EMAIL_FROM || "Christmas Country Hat <hat@fantasyfundmanager.co.uk>";
@@ -51,9 +53,12 @@ async function emailOrganiser(names) {
       headers: { authorization: "Bearer " + key, "content-type": "application/json" },
       body: JSON.stringify({
         from, to: to.split(",").map((t) => t.trim()),
-        subject: "🎩 The Christmas Country Hat draw is done",
-        text: `The draw has run. Everyone below has been given a country (nobody got their own).\n\n${list}\n\n` +
-              `Each person can open the link on their own phone to see their country. Allocations are private, so they're not in this email.`,
+        subject: auto ? `🎩 All ${names.length} are in! Time to pull out your countries` : "🎩 The Christmas Country Hat draw is done",
+        text: (auto ? `All ${names.length} people have put a country in the hat, so entries have closed and the draw has run.\n\n`
+                    : `The draw has run.\n\n`) +
+              `Everyone below has been given a country (nobody got their own):\n\n${list}\n\n` +
+              `Tell everyone to open the link again and tap "Pull my country out":\n${process.env.SITE_URL || "https://christmas-country-hat.vercel.app/"}\n\n` +
+              `Allocations are private, so they're not in this email.`,
       }),
     });
     if (!r.ok) return "The draw worked, but the email failed (" + r.status + " " + (await r.text()).slice(0, 120) + ").";
@@ -106,12 +111,18 @@ export default async function handler(req, res) {
       if (problem) return res.status(400).json({ error: problem });
       return res.json(view);
     }
+    let autoNames = null;
     const view = await withLock((s) => {
-      if (action === "add") game.add(s, id, name, code);
+      if (action === "add") {
+        game.add(s, id, name, code);
+        // Last person in: close entries and run the draw straight away.
+        if (Object.keys(s.players).length >= TARGET) { game.setOpen(s, false); autoNames = game.runDraw(s); }
+      }
       else if (action === "remove") game.remove(s, id);
       else throw new game.GameError("Unknown action.");
       return game.playerView(s, id);
     });
+    if (autoNames) await emailOrganiser(autoNames, true);
     return res.json(view);
   } catch (e) {
     if (e instanceof game.GameError) return res.status(400).json({ error: e.message });

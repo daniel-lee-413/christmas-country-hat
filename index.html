@@ -279,7 +279,7 @@ footer { text-align: center; color: #6F8E84; font-size: .8rem; margin-top: 4px; 
       setStatus(v.phase);
       $("tally").textContent = people(v.people.length);
       $("host-status").textContent = v.phase === "open" ? "Entries are open" : v.phase === "closed" ? "Ready for the draw" : "The draw is done";
-      $("host-help").textContent = v.phase === "open" ? "When everyone's in, close entries, then run the draw."
+      $("host-help").textContent = v.phase === "open" ? "When the 5th person joins, entries close and the draw runs by itself, and you'll get an email. If fewer than 5 are coming, close entries and run the draw yourself."
         : v.phase === "closed" ? "Nobody new can join. Run the draw when you're ready, or reopen entries if someone's missing."
         : "Everyone can now open the link on their own phone and pull out their country.";
       $("people").innerHTML = "";
@@ -343,7 +343,7 @@ footer { text-align: center; color: #6F8E84; font-size: .8rem; margin-top: 4px; 
     $("change").hidden = !open;
 
     var got = me && me.got, seen = got && store("hatseen") === id + got;
-    var hint = state.phase === "open" ? "Once everyone's in, the organiser closes entries and runs the draw."
+    var hint = state.phase === "open" ? "Once all 5 are in, the hat closes by itself and you can pull out your country."
       : state.phase === "closed" ? (me ? "Entries are closed. Waiting for the organiser to run the draw." : "")
       : me ? "The draw is done. Your country is waiting in the hat, and only you can see it." : "The draw has run. If you put a country in, find your entry above to see what you got.";
     $("out-hint").textContent = hint;
