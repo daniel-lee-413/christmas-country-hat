@@ -1,31 +1,31 @@
 # Christmas Country Hat
 
-Players open the link, type their name, and put one country in the hat.
-When everyone's in, the host closes the hat and each person draws a country.
-Nobody can get their own, and nobody gets stuck at the end.
+Each friend opens the link on their own phone, adds their name and one country.
+Nobody can see anyone else's country, not even the organiser. The organiser closes
+entries and runs the draw. Everyone gets one country, nobody gets their own, and each
+person sees only their own result. The organiser gets an email when the draw is done
+(names only, no countries).
 
-Host view: add `?host` to the end of the link, e.g. `https://your-site.vercel.app/?host`
+- Player link: `https://christmas-country-hat.vercel.app/`
+- Organiser link: `https://christmas-country-hat.vercel.app/?host`
 
-## Put it live on Vercel (about 10 minutes, free)
+## Vercel settings (Settings → Environment Variables)
 
-1. **Upload the project**: Vercel dashboard → Add New → Project → import from GitHub
-   (push this folder to a new repo first), or run `npx vercel` inside this folder.
-   No build settings needed; leave everything as default.
-2. **Add the database**: in the project, open the **Storage** tab → Create Database →
-   **Upstash for Redis** (free plan) → connect it to this project.
-   This adds the connection settings automatically.
-3. **Set the host password**: Settings → Environment Variables → add
-   `HOST_PASSWORD` with a password of your choice.
-4. **Redeploy**: Deployments tab → ⋯ on the latest one → Redeploy
-   (so it picks up the database and password).
-5. Test it: open `/?host`, enter the password, then add a country from your phone.
-   Use **Reset everything** afterwards to clear the test.
+| Name | What it is |
+|---|---|
+| `HOST_PASSWORD` | Organiser password |
+| `RESEND_API_KEY` | Resend API key (sending access is enough) |
+| `ORGANISER_EMAIL` | Where the "draw is done" email goes (comma-separate for more than one) |
+| `EMAIL_FROM` | Optional. Defaults to `Christmas Country Hat <hat@fantasyfundmanager.co.uk>` |
+| Upstash database settings | Added automatically when the Upstash database is connected |
 
-## On the night (well, before it)
+Redeploy after changing any setting.
 
-1. Send everyone the link. Each person adds their name and a country.
-2. When all 5 are in, the host opens `/?host` and taps **Close the hat**.
-3. Everyone opens the link again and taps **Draw from the hat**.
+## Running it
 
-Players are remembered by their browser, so they should use the same phone or
-laptop each time. If someone switches device, they'll appear as a new person.
+1. Share the player link. Each person adds their name and country **on the phone they'll use later**.
+2. Organiser: open the organiser link → **Close entries** → **Run the draw** (tap twice to confirm).
+3. Everyone opens the link and taps **Reveal my country**.
+4. **New round** (tap twice) wipes everything to start again.
+
+If someone's missing after entries close, tap **Reopen entries** (only before the draw).

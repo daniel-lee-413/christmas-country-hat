@@ -51,6 +51,11 @@ ul.options li[aria-selected="true"], ul.options li:hover { background: var(--ok-
 .row { display: flex; gap: 10px; flex-wrap: wrap; }
 [hidden] { display: none !important; }
 @media (max-width: 420px) { h1 { font-size: 1.65rem; } .hat { width: 64px; height: 64px; } .big { font-size: 1.75rem; } }
+
+.status { display: inline-block; margin-top: 6px; padding: 2px 10px; border-radius: 999px; font-size: .8rem; font-weight: 700; background: var(--ok-bg); color: var(--pine); }
+.status.closed { background: var(--warn-bg); color: var(--berry); }
+.share { align-self: flex-start; padding: 8px 14px; font-size: .95rem; }
+.count { font: 400 2.4rem/1 var(--font-display); }
 </style>
 </head>
 <body>
@@ -62,63 +67,68 @@ ul.options li[aria-selected="true"], ul.options li:hover { background: var(--ok-
       <path class="band" d="M25.5 64 Q48 72 70.5 64 L71.2 72 Q48 80 24.8 72 Z"/>
       <path class="star" d="M48 6 l3.2 6.6 7.3 1 -5.3 5.1 1.3 7.2 -6.5 -3.5 -6.5 3.5 1.3 -7.2 -5.3 -5.1 7.3 -1 z"/>
     </svg>
-    <div><h1>Christmas Country Hat</h1><p class="tally" id="tally">Opening the hat…</p></div>
+    <div>
+      <h1>Christmas Country Hat</h1>
+      <p class="tally" id="tally">Opening the hat…</p>
+      <span class="status" id="status" hidden></span>
+    </div>
   </header>
+  <button type="button" class="quiet share" id="share">🔗 Share the link</button>
 
   <!-- PLAYER VIEW -->
   <div id="player" class="wrap" style="padding:0">
     <section>
       <p class="label">Step 1</p>
       <h2>Put your country in the hat</h2>
-      <p class="hint">Add your name, then type a country and pick it from the list. No country can go in twice.</p>
+      <p class="hint">Add your name, then type a country and pick it from the list. Nobody else can see which country you put in.</p>
       <form id="in-form" autocomplete="off">
-        <input type="text" id="name" placeholder="Your name" maxlength="40">
-        <input type="text" id="country" placeholder="Start typing, e.g. Japan" role="combobox" aria-expanded="false" aria-controls="opts">
+        <input type="text" id="name" placeholder="Your name" maxlength="40" autocapitalize="words">
+        <input type="text" id="country" placeholder="Start typing, e.g. Japan" role="combobox" aria-expanded="false" aria-controls="opts" autocapitalize="off" autocorrect="off">
         <ul class="options" id="opts" role="listbox" hidden></ul>
         <button type="submit" id="drop">Drop it in the hat</button>
       </form>
       <div class="mine" id="mine" hidden>
-        <span><span id="mine-who"></span>, you put in <strong id="mine-name"></strong></span>
-        <button type="button" class="quiet" id="change">Take it back out</button>
+        <span>✅ <span id="mine-who"></span>, you're in with <strong id="mine-name"></strong></span>
+        <button type="button" class="quiet" id="change">Change it</button>
       </div>
       <p class="msg" id="msg" role="status" aria-live="polite"></p>
     </section>
 
     <section>
       <p class="label">Step 2</p>
-      <h2>Pull one out</h2>
-      <p class="hint" id="out-hint">Once everyone's in, the host closes the hat and you can draw.</p>
-      <button type="button" id="draw" disabled>Draw from the hat</button>
+      <h2>Your country</h2>
+      <p class="hint" id="out-hint"></p>
+      <button type="button" id="reveal-btn" hidden>Reveal my country</button>
       <div class="reveal" id="reveal" hidden>
-        <span class="label">Your country</span>
+        <span class="label">You got</span>
         <div class="big" id="big"></div>
         <p class="hint">Keep it secret until the night. Start planning the outfit.</p>
       </div>
-      <button type="button" class="quiet" id="peek" hidden>Show my country</button>
-      <p class="msg" id="msg2" role="status" aria-live="polite"></p>
     </section>
   </div>
 
-  <!-- HOST VIEW (open the site with ?host on the end) -->
+  <!-- ORGANISER VIEW (open the site with ?host on the end) -->
   <div id="host" class="wrap" style="padding:0" hidden>
     <section id="host-login">
-      <p class="label">Host</p>
-      <h2>Host password</h2>
-      <form id="host-form"><input type="password" id="pw" placeholder="Password"><button type="submit">Open host view</button></form>
+      <p class="label">Organiser</p>
+      <h2>Organiser password</h2>
+      <form id="host-form"><input type="password" id="pw" placeholder="Password"><button type="submit">Open organiser view</button></form>
       <p class="msg" id="hmsg"></p>
     </section>
     <section id="host-panel" hidden>
-      <p class="label">Host</p>
+      <p class="label">Organiser</p>
       <h2 id="host-status"></h2>
-      <p class="hint">Who's joined (✓ = has drawn):</p>
+      <p class="hint" id="host-help"></p>
+      <div><span class="count" id="host-count">0</span> <span class="hint">in the hat</span></div>
       <ul class="chips" id="people"></ul>
-      <details><summary class="hint">Spoilers: countries in the hat</summary><ul class="chips" id="countries" style="padding-top:10px"></ul></details>
+      <p class="hint">You can see who's joined, but not which countries are in the hat or who gets what.</p>
       <div class="row">
-        <button type="button" id="close-hat">Close the hat</button>
-        <button type="button" class="quiet" id="open-hat">Reopen</button>
-        <button type="button" class="quiet" id="reset">Reset everything</button>
+        <button type="button" id="close-btn">Close entries</button>
+        <button type="button" id="draw-btn">Run the draw</button>
+        <button type="button" class="quiet" id="open-btn">Reopen entries</button>
+        <button type="button" class="quiet" id="reset">New round</button>
       </div>
-      <p class="msg" id="hmsg2"></p>
+      <p class="msg" id="hmsg2" role="status" aria-live="polite"></p>
     </section>
   </div>
 </div>
@@ -142,6 +152,7 @@ ul.options li[aria-selected="true"], ul.options li:hover { background: var(--ok-
   }
   var $ = function (id) { return document.getElementById(id); };
   function say(el, text, tone) { el.textContent = text || ""; el.className = "msg " + (tone || ""); }
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
 
   async function api(method, body, extraHeaders) {
     var opts = { method: method, headers: Object.assign({ "content-type": "application/json" }, extraHeaders || {}) };
@@ -153,68 +164,102 @@ ul.options li[aria-selected="true"], ul.options li:hover { background: var(--ok-
     return data;
   }
 
-  // ---------- HOST ----------
+  function setStatus(phase) {
+    var s = $("status"); s.hidden = false;
+    s.textContent = phase === "open" ? "Entries open" : phase === "closed" ? "Entries closed" : "Draw done 🎉";
+    s.className = "status" + (phase === "open" ? "" : " closed");
+  }
+
+  // Share the player link (never the organiser link).
+  $("share").addEventListener("click", async function () {
+    var url = location.origin + "/";
+    try { if (navigator.share) { await navigator.share({ title: "Christmas Country Hat", text: "Put your country in the hat!", url: url }); return; } } catch (e) { if (e && e.name === "AbortError") return; }
+    try { await navigator.clipboard.writeText(url); $("share").textContent = "✅ Link copied"; }
+    catch (e) { window.prompt("Copy this link:", url); }
+    setTimeout(function () { $("share").textContent = "🔗 Share the link"; }, 2500);
+  });
+
+  // ---------- ORGANISER ----------
   if (new URLSearchParams(location.search).has("host")) {
     $("player").hidden = true; $("host").hidden = false;
-    var pw = "", resetArmed = false;
+    var pw = "", resetArmed = false, drawArmed = false;
     try { pw = sessionStorage.getItem("hatpw") || ""; } catch (e) {}
     function drawHost(v) {
       $("host-login").hidden = true; $("host-panel").hidden = false;
-      var drawn = v.people.filter(function (p) { return p.hasDrawn; }).length;
-      $("tally").textContent = v.people.length + " in the hat · " + drawn + " drawn";
-      $("host-status").textContent = v.closed ? "The hat is closed. People can draw." : "The hat is open. People are adding countries.";
-      $("people").innerHTML = ""; $("countries").innerHTML = "";
-      v.people.forEach(function (p) { var li = document.createElement("li"); li.textContent = p.name + (p.hasDrawn ? " ✓" : ""); $("people").appendChild(li); });
-      v.countries.slice().sort(function (a, b) { return nameOf(a.code).localeCompare(nameOf(b.code)); }).forEach(function (c) {
-        var li = document.createElement("li"); if (c.drawn) li.className = "done"; li.textContent = flag(c.code) + " " + nameOf(c.code); $("countries").appendChild(li);
-      });
+      setStatus(v.phase);
+      $("tally").textContent = v.people.length + (v.people.length === 1 ? " person" : " people") + " in the hat";
+      $("host-count").textContent = v.people.length;
+      $("host-status").textContent = v.phase === "open" ? "Entries are open" : v.phase === "closed" ? "Entries are closed" : "The draw is done";
+      $("host-help").textContent = v.phase === "open" ? "When everyone's in, close entries, then run the draw."
+        : v.phase === "closed" ? "Nobody new can join. Run the draw when you're ready, or reopen if someone's missing."
+        : "Everyone can now open the link on their own phone to see their country.";
+      $("people").innerHTML = "";
+      v.people.forEach(function (n) { var li = document.createElement("li"); li.textContent = n; $("people").appendChild(li); });
       if (!v.people.length) { var li = document.createElement("li"); li.textContent = "Nobody yet"; $("people").appendChild(li); }
-      $("close-hat").disabled = v.closed; $("open-hat").disabled = !v.closed || drawn > 0;
+      $("close-btn").hidden = v.phase !== "open";
+      $("draw-btn").hidden = v.phase !== "closed";
+      $("open-btn").hidden = v.phase !== "closed";
     }
     async function hostLoad() {
       try { drawHost(await api("GET", { host: 1 }, { "x-host-password": pw })); try { sessionStorage.setItem("hatpw", pw); } catch (e) {} }
       catch (e) { $("host-login").hidden = false; $("host-panel").hidden = true; if (pw) say($("hmsg"), e.message, "warn"); }
     }
-    async function hostDo(action) {
-      try { drawHost(await api("POST", { action: action }, { "x-host-password": pw })); say($("hmsg2"), ""); }
+    async function hostDo(action, okText) {
+      try { var v = await api("POST", { action: action }, { "x-host-password": pw }); drawHost(v); say($("hmsg2"), [okText, v.email].filter(Boolean).join(" "), "ok"); }
       catch (e) { say($("hmsg2"), e.message, "warn"); }
     }
+    // Two taps to confirm, without browser pop-ups.
+    function confirmTap(btn, label, armedLabel, flagName, fn) {
+      btn.addEventListener("click", function () {
+        if (flagName === "reset" ? !resetArmed : !drawArmed) {
+          if (flagName === "reset") resetArmed = true; else drawArmed = true;
+          btn.textContent = armedLabel;
+          setTimeout(function () { resetArmed = drawArmed = false; btn.textContent = label; }, 4000);
+          return;
+        }
+        resetArmed = drawArmed = false; btn.textContent = label; fn();
+      });
+    }
     $("host-form").addEventListener("submit", function (ev) { ev.preventDefault(); pw = $("pw").value; hostLoad(); });
-    $("close-hat").addEventListener("click", function () { hostDo("close"); });
-    $("open-hat").addEventListener("click", function () { hostDo("open"); });
-    $("reset").addEventListener("click", function () {
-      if (!resetArmed) { resetArmed = true; $("reset").textContent = "Tap again to wipe everything"; setTimeout(function () { resetArmed = false; $("reset").textContent = "Reset everything"; }, 4000); return; }
-      resetArmed = false; $("reset").textContent = "Reset everything"; hostDo("reset");
-    });
+    $("close-btn").addEventListener("click", function () { hostDo("close", "Entries closed."); });
+    $("open-btn").addEventListener("click", function () { hostDo("open", "Entries reopened."); });
+    confirmTap($("draw-btn"), "Run the draw", "Tap again to run the draw", "draw", function () { hostDo("draw", "Done! Everyone has a country."); });
+    confirmTap($("reset"), "New round", "Tap again to wipe everything", "reset", function () { hostDo("reset", "New round started. The hat is empty."); });
     if (pw) hostLoad();
     setInterval(function () { if (!$("host-panel").hidden) hostLoad(); }, 5000);
     return;
   }
 
   // ---------- PLAYER ----------
-  var id = null;
-  try { id = localStorage.getItem("hatid"); if (!id) { id = crypto.randomUUID(); localStorage.setItem("hatid", id); } } catch (e) {}
-  if (!id) id = crypto.randomUUID();
-  try { $("name").value = localStorage.getItem("hatname") || ""; } catch (e) {}
+  var id = store("hatid");
+  if (!id) { id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()); store("hatid", id); }
+  $("name").value = store("hatname") || "";
 
-  var state = null, busy = false, spinning = false, revealed = false, picked = null, shown = [], active = -1;
+  var state = null, busy = false, spinning = false, picked = null, shown = [], active = -1;
 
   function render() {
     if (!state) return;
-    $("tally").textContent = state.count + (state.count === 1 ? " country" : " countries") + " in the hat · " + state.drawn + " drawn" + (state.closed ? " · hat closed" : "");
-    var me = state.me;
-    $("in-form").hidden = !!me; $("mine").hidden = !me;
+    setStatus(state.phase);
+    $("tally").textContent = state.count + (state.count === 1 ? " person" : " people") + " in the hat";
+    var me = state.me, open = state.phase === "open";
+    $("in-form").hidden = !!me || !open; $("mine").hidden = !me;
     if (me) { $("mine-who").textContent = me.name; $("mine-name").textContent = flag(me.code) + " " + nameOf(me.code); }
-    $("change").disabled = busy || state.closed;
-    $("drop").disabled = busy || state.closed;
-    $("draw").hidden = !!(me && me.drew);
-    $("draw").disabled = busy || !me || !state.closed;
-    if (!me && state.closed) say($("msg"), "The hat is closed and this device isn't in it. Ask the host to reopen it so you can add a country.", "warn");
-    $("out-hint").textContent = !me && state.closed ? "This device didn't put a country in before the hat closed." : !me ? "Put your own country in first." : !state.closed ? "Once everyone's in, the host closes the hat and you can draw." : "You get a random country that someone else put in. Draw once and keep it secret.";
-    if (me && me.drew && !spinning) {
-      $("reveal").hidden = !revealed; $("peek").hidden = revealed;
-      if (revealed) paint(me.drew);
-    } else if (!spinning) { $("reveal").hidden = true; $("peek").hidden = true; }
+    $("change").hidden = !open;
+    $("drop").disabled = busy; $("change").disabled = busy;
+    if (!me && !open && !$("msg").textContent) say($("msg"), "Entries are closed and this device isn't in the hat. Ask the organiser to reopen entries if you want to join.", "warn");
+
+    var hint = $("out-hint");
+    if (state.phase === "open") hint.textContent = "Once everyone's in, the organiser closes entries and runs the draw.";
+    else if (state.phase === "closed") hint.textContent = me ? "Entries are closed. Waiting for the organiser to run the draw…" : "";
+    else hint.textContent = me ? "The draw is done! Only you can see your result." : "The draw has run, but this device didn't have an entry.";
+
+    var got = me && me.got;
+    if (!spinning) {
+      var seen = got && store("hatseen") === got;
+      $("reveal-btn").hidden = !got || seen;
+      $("reveal").hidden = !(got && seen);
+      if (got && seen) paint(got);
+    }
   }
   function paint(code, cls) {
     $("reveal").className = "reveal" + (cls ? " " + cls : "");
@@ -234,6 +279,7 @@ ul.options li[aria-selected="true"], ul.options li:hover { background: var(--ok-
       var li = document.createElement("li"); li.setAttribute("role", "option");
       li.innerHTML = '<span class="flag"></span><span></span>'; li.children[0].textContent = flag(c.code); li.children[1].textContent = c.name;
       li.addEventListener("mousedown", function (ev) { ev.preventDefault(); pick(c); });
+      li.addEventListener("touchend", function (ev) { ev.preventDefault(); pick(c); });
       opts.appendChild(li);
     });
     opts.hidden = false; input.setAttribute("aria-expanded", "true");
@@ -246,35 +292,32 @@ ul.options li[aria-selected="true"], ul.options li:hover { background: var(--ok-
     else if (ev.key === "Enter" && active > -1) { ev.preventDefault(); pick(shown[active]); }
     else if (ev.key === "Escape") closeOpts();
   });
-  input.addEventListener("blur", function () { setTimeout(closeOpts, 120); });
+  input.addEventListener("blur", function () { setTimeout(closeOpts, 150); });
 
-  async function act(body, okText, msgEl) {
+  async function act(body, okText) {
     busy = true; render();
-    try { state = await api("POST", Object.assign({ id: id }, body)); if (okText) say(msgEl, okText, "ok"); return true; }
-    catch (e) { say(msgEl, e.message, "warn"); return false; }
+    try { state = await api("POST", Object.assign({ id: id }, body)); say($("msg"), okText, "ok"); return true; }
+    catch (e) { say($("msg"), e.message, "warn"); return false; }
     finally { busy = false; render(); }
   }
 
   $("in-form").addEventListener("submit", async function (ev) {
     ev.preventDefault();
-    var name = $("name").value.trim();
+    var name = $("name").value.replace(/\s+/g, " ").trim();
     if (!name) return say($("msg"), "Tell the hat your name first.", "warn");
     var c = picked || resolve(input.value);
     if (!c) return say($("msg"), "Pick a country from the list so the hat can recognise it.", "warn");
-    try { localStorage.setItem("hatname", name); } catch (e) {}
-    if (await act({ action: "add", name: name, code: c.code }, c.name + " is in the hat.", $("msg"))) { input.value = ""; picked = null; }
+    store("hatname", name);
+    if (await act({ action: "add", name: name, code: c.code }, "You're in! Only you can see your country.")) { input.value = ""; picked = null; }
   });
-  $("change").addEventListener("click", function () { act({ action: "remove" }, "Taken back out. Pick a different country.", $("msg")); });
-  $("peek").addEventListener("click", function () { revealed = true; render(); });
+  $("change").addEventListener("click", function () { act({ action: "remove" }, "Taken back out. Pick a different country."); });
 
-  $("draw").addEventListener("click", async function () {
-    say($("msg2"), "");
-    if (!(await act({ action: "draw" }, "", $("msg2")))) return;
-    var finalCode = state.me.drew;
-    spinning = true; $("reveal").hidden = false; $("peek").hidden = true; $("draw").hidden = true;
+  $("reveal-btn").addEventListener("click", function () {
+    var finalCode = state.me.got;
+    spinning = true; $("reveal").hidden = false; $("reveal-btn").hidden = true;
     var reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
     var t = reduced ? null : setInterval(function () { paint(LIST[Math.floor(Math.random() * LIST.length)].code, "spinning"); }, 80);
-    setTimeout(function () { clearInterval(t); spinning = false; revealed = true; paint(finalCode); render(); }, reduced ? 0 : 1500);
+    setTimeout(function () { clearInterval(t); spinning = false; store("hatseen", finalCode); paint(finalCode); render(); }, reduced ? 0 : 1500);
   });
 
   refresh();
